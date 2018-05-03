@@ -19,8 +19,10 @@ func api(rw http.ResponseWriter, req *http.Request) {
 	out, err := exec.Command("/bin/sh", cmd+".sh").Output()
 	if err != nil {
 		//log.Fatal(err)
+		log.Printf("result:%s\n", err)
 		fmt.Fprintf(rw, "result:%s\n", err)
 	} else {
+		log.Printf("result:%s\n", out)
 		fmt.Fprintf(rw, "result:%s\n", out)
 	}
 }
@@ -32,6 +34,15 @@ func main() {
 	if len(argsWithoutProg) > 0 {
 		port = argsWithoutProg[0]
 	}
-	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%s", port), nil))
+
+	f, err := os.OpenFile("logs", os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
+	if err != nil {
+		log.Fatalf("error opening file: %v", err)
+	}
+	defer f.Close()
+
+	log.SetOutput(f)
+
 	log.Printf("server is running on %s", port)
+	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%s", port), nil))
 }
